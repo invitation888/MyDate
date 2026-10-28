@@ -1,0 +1,560 @@
+/* =========================================================
+   Dinner Invitation — for Reem, from Nabil
+   ========================================================= */
+
+:root {
+  --wine-900: #2a060e;
+  --wine-800: #3d0a14;
+  --wine-700: #521020;
+  --wine-600: #6e1426;
+  --wine-500: #8a1f35;
+  --rose: #b4495d;
+  --gold: #c9a45c;
+  --gold-light: #e8d3a0;
+  --cream: #f6eee2;
+  --cream-dark: #e9dcc6;
+  --ink: #4a0f1c;
+
+  --script: "Great Vibes", "Segoe Script", "Snell Roundhand", "Brush Script MT", serif;
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "Montserrat", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--serif);
+  color: var(--cream);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(138, 31, 53, .55), transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(110, 20, 38, .6), transparent 60%),
+    var(--wine-800);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* subtle velvet grain */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+body.locked { overflow: hidden; height: 100vh; }
+
+.script { font-family: var(--script); font-weight: 400; }
+
+/* =========================================================
+   VIDEO INTRO
+   ========================================================= */
+.intro {
+  position: fixed; inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 100;
+  background: var(--wine-800);
+  cursor: pointer;
+  overflow: hidden;
+  transition: opacity 1.8s ease, visibility 1.8s ease;
+}
+.intro.hide { opacity: 0; visibility: hidden; }
+
+.intro video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;          /* always fill the whole screen */
+  object-position: center;
+  display: block;
+  transition: opacity 1.4s ease, transform 2s ease, filter 1.4s ease;
+}
+/* soft fade of the video itself before the invitation appears */
+.intro.fading video {
+  opacity: 0;
+  transform: scale(1.08);
+  filter: blur(6px) brightness(1.3);
+}
+
+.intro-hint {
+  position: absolute; left: 0; right: 0; bottom: 7vh;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12px; letter-spacing: .5em; text-transform: uppercase;
+  color: var(--cream);
+  text-shadow: 0 2px 12px rgba(0,0,0,.7);
+  animation: blink 2.4s ease-in-out infinite;
+  transition: opacity .6s ease;
+  pointer-events: none;
+}
+.intro.playing .intro-hint { opacity: 0; animation: none; }
+
+/* =========================================================
+   MUSIC BUTTON
+   ========================================================= */
+.music-btn {
+  position: fixed; right: 18px; bottom: 18px;
+  z-index: 90;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  background: rgba(61,10,20,.85);
+  backdrop-filter: blur(6px);
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0,0,0,.4);
+  opacity: 0; visibility: hidden; transform: scale(.6);
+  transition: opacity .6s ease, transform .6s ease, visibility .6s;
+}
+.music-btn.show { opacity: 1; visibility: visible; transform: scale(1); }
+.music-btn svg { width: 20px; height: 20px; fill: var(--gold-light); }
+.music-btn .icon-play { display: none; margin-left: 3px; }
+.music-btn.paused .icon-play { display: block; }
+.music-btn.paused .icon-pause { display: none; }
+.music-btn:not(.paused)::after { /* soft ring while playing */
+  content: ""; position: absolute; inset: -1px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  animation: ripple 2s ease-out infinite;
+}
+
+/* =========================================================
+   FALLING HEARTS
+   ========================================================= */
+.petals { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+.petal {
+  position: absolute; top: -50px;
+  width: var(--s); height: var(--s);
+  background: url("images/heart.svg") center / contain no-repeat;
+  opacity: .9;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
+  animation: fall var(--d) linear forwards, sway calc(var(--d) / 4) ease-in-out infinite alternate;
+}
+@keyframes fall {
+  to { transform: translate3d(var(--x), 115vh, 0) rotate(var(--rot)); }
+}
+@keyframes sway {
+  from { margin-left: -25px; } to { margin-left: 25px; }
+}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+main { position: relative; z-index: 2; }
+
+.section {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 90px 20px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: clamp(48px, 12vw, 68px);
+  line-height: 1.35;
+  margin-bottom: 4px;
+  /* extra room so the tall script letters aren't clipped by the gold gradient */
+  padding: .25em .3em .1em;
+  background: linear-gradient(110deg, #b8893e 0%, #f3dfa8 30%, #c9a45c 50%, #fff1c9 70%, #b8893e 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+.sub {
+  font-style: italic;
+  font-size: 19px;
+  font-weight: 300;
+  color: rgba(246,238,226,.8);
+  margin-bottom: 40px;
+}
+
+/* =========================================================
+   1. OPENING — letter written on the card in openning.png
+   ========================================================= */
+.hero {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 0 0;
+  overflow: hidden;
+}
+.opening {
+  position: relative;
+  width: min(100vw, 600px, 64svh);
+  aspect-ratio: 2 / 3;
+  container-type: inline-size;
+}
+.opening-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 40px rgba(0,0,0,.45));
+}
+/* the blank card sits at x 20%–80%, y 6.4%–59% of the image */
+.card-text {
+  position: absolute;
+  left: 22.5%; right: 22.5%;
+  top: 9%; height: 46%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  color: var(--ink);
+}
+.card-text > * { opacity: 0; transform: translateY(10px); transition: opacity 1.2s ease, transform 1.2s ease; }
+.opening.visible .card-text > * { opacity: 1; transform: none; }
+.opening.visible .card-text > *:nth-child(1) { transition-delay: .4s; }
+.opening.visible .card-text > *:nth-child(2) { transition-delay: 1s; }
+.opening.visible .card-text > *:nth-child(3) { transition-delay: 1.6s; }
+.opening.visible .card-text > *:nth-child(4) { transition-delay: 2.1s; }
+.opening.visible .card-text > *:nth-child(5) { transition-delay: 2.6s; }
+
+.ct-dear {
+  font-family: var(--script);
+  font-size: 7.6cqw;
+  color: var(--wine-600);
+  line-height: 1.1;
+  margin-bottom: 2.4cqw;
+}
+.ct-body {
+  font-size: 3.55cqw;
+  line-height: 1.42;
+  margin-bottom: 1.8cqw;
+}
+.ct-date {
+  font-family: var(--sans);
+  font-size: 2cqw;
+  letter-spacing: .3em; text-transform: uppercase;
+  color: var(--wine-500);
+  margin: 1cqw 0 2.4cqw;
+  padding: 1.2cqw 0;
+  border-top: 1px solid rgba(201,164,92,.7);
+  border-bottom: 1px solid rgba(201,164,92,.7);
+}
+.ct-sign {
+  font-style: italic;
+  font-size: 3.4cqw;
+  line-height: 1.3;
+}
+.ct-sign span, .finale-sign span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--wine-600);
+}
+.ct-sign span { font-size: 5.4cqw; }
+
+/* =========================================================
+   CREAM CARD (rsvp)
+   ========================================================= */
+.card {
+  position: relative;
+  background: radial-gradient(circle at 50% 0%, #fffaf1, var(--cream) 60%, var(--cream-dark));
+  color: var(--ink);
+  padding: 56px 34px 48px;
+  border-radius: 4px;
+  box-shadow: 0 30px 60px rgba(0,0,0,.35), 0 0 0 1px rgba(201,164,92,.4) inset;
+}
+.card::before {
+  content: ""; position: absolute; inset: 12px;
+  border: 1px solid rgba(201,164,92,.7);
+  pointer-events: none;
+}
+.corner { position: absolute; width: 22px; height: 22px; border: 1.5px solid var(--gold); }
+.corner.tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+.corner.tr { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+.corner.bl { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+.corner.br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+.title-dark {
+  font-size: clamp(40px, 10vw, 54px);
+  color: var(--wine-600);
+  margin-bottom: 20px;
+  line-height: 1.1;
+}
+.card p { font-size: 19px; line-height: 1.6; margin-bottom: 16px; }
+
+/* =========================================================
+   2. CALENDAR + COUNTDOWN
+   ========================================================= */
+.calendar {
+  background: rgba(246,238,226,.06);
+  border: 1px solid rgba(201,164,92,.4);
+  border-radius: 6px;
+  padding: 26px 18px 18px;
+  backdrop-filter: blur(4px);
+}
+.cal-month {
+  font-family: var(--sans); font-size: 11px; letter-spacing: .35em; text-transform: uppercase;
+  color: var(--gold-light); margin-bottom: 18px;
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  row-gap: 14px;
+  font-family: var(--sans); font-size: 15px;
+  color: rgba(246,238,226,.55);
+}
+.cal-grid .d { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-light); }
+.the-day { position: relative; color: var(--cream); font-weight: 500; display: grid; place-items: center; }
+.cal-heart {
+  position: absolute;
+  width: 46px; height: 42px;
+  left: 50%; top: 50%; transform: translate(-50%, -52%);
+  overflow: visible;
+}
+.cal-heart path {
+  fill: none; stroke: var(--rose); stroke-width: 4;
+  stroke-dasharray: 300; stroke-dashoffset: 300;
+}
+.calendar.visible .cal-heart path { animation: draw 2s .6s ease forwards, heartbeat 1.6s 2.8s ease-in-out infinite; transform-origin: center; }
+.cal-foot { font-size: 38px; color: var(--gold-light); margin-top: 10px; text-align: right; padding-right: 8px; }
+
+.countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 40px; }
+.countdown div {
+  padding: 16px 4px;
+  border: 1px solid rgba(201,164,92,.35);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), transparent);
+}
+.countdown b {
+  display: block;
+  font-family: var(--serif); font-weight: 400;
+  font-size: clamp(30px, 8vw, 42px);
+  color: var(--gold-light);
+  line-height: 1;
+}
+.countdown span {
+  font-family: var(--sans); font-size: 9px; letter-spacing: .25em; text-transform: uppercase;
+  color: rgba(246,238,226,.6);
+}
+.countdown-note { font-style: italic; margin-top: 18px; color: rgba(246,238,226,.75); font-size: 18px; }
+
+/* =========================================================
+   3. TICKET
+   ========================================================= */
+.ticket {
+  position: relative;
+  background: var(--cream);
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(201,164,92,.08), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(110,20,38,.06), transparent 40%);
+  color: var(--ink);
+  padding: 60px 26px 54px;
+  box-shadow: 0 30px 60px rgba(0,0,0,.35);
+}
+.perf {
+  position: absolute; left: 0; right: 0; height: 14px;
+  background: radial-gradient(circle at 50% 50%, var(--wine-800) 5px, transparent 5.5px) 0 0 / 22px 14px repeat-x;
+}
+.perf.top { top: -7px; }
+.perf.bottom { bottom: -7px; }
+
+.t-label { font-family: var(--sans); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--wine-500); }
+.t-venue { font-size: clamp(54px, 14vw, 72px); color: var(--wine-600); line-height: 1.2; margin: 6px 0 18px; }
+.t-row {
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  border-top: 1px solid rgba(110,20,38,.25);
+  border-bottom: 1px solid rgba(110,20,38,.25);
+  padding: 18px 0; margin-bottom: 30px;
+}
+.t-row > div:not(.t-divider) { display: flex; align-items: center; gap: 8px; }
+.t-big { font-family: var(--serif); font-size: 42px; font-weight: 500; color: var(--wine-600); line-height: 1; }
+.t-small { font-family: var(--sans); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; text-align: left; line-height: 1.5; color: var(--wine-500); }
+.t-pm { font-family: var(--sans); font-size: 11px; font-weight: 500; letter-spacing: .1em; margin-left: 3px; }
+.t-divider { width: 1px; align-self: stretch; background: rgba(110,20,38,.25); }
+.t-year { font-family: var(--script); font-size: 30px; color: var(--gold); margin-top: 24px; }
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.btn {
+  display: inline-block;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  letter-spacing: .25em; text-transform: uppercase;
+  text-decoration: none;
+  color: var(--cream);
+  background: linear-gradient(135deg, var(--wine-500), var(--wine-700));
+  border: 1px solid var(--gold);
+  padding: 16px 30px;
+  border-radius: 40px;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease;
+  box-shadow: 0 10px 24px rgba(61,10,20,.35);
+}
+.btn::after {
+  content: ""; position: absolute; top: 0; left: -80%;
+  width: 50%; height: 100%;
+  background: linear-gradient(110deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg);
+  animation: shine 3.5s ease-in-out infinite;
+}
+.btn:hover { box-shadow: 0 14px 30px rgba(61,10,20,.45); }
+.btn.ghost { background: transparent; color: var(--wine-600); border-color: rgba(110,20,38,.4); box-shadow: none; }
+.btn.ghost::after { display: none; }
+
+/* =========================================================
+   4. FRAMED IMAGES (wine, flower)
+   ========================================================= */
+.framed {
+  position: relative;
+  margin: 0 auto 30px;
+  max-width: 420px;
+  padding: 12px;
+  background: linear-gradient(145deg, #e8d3a0, #b8893e 40%, #f3dfa8 60%, #a77b34);
+  box-shadow: 0 30px 60px rgba(0,0,0,.45);
+}
+.framed::after {
+  content: ""; position: absolute; inset: 20px;
+  border: 1px solid rgba(246,238,226,.5);
+  pointer-events: none;
+}
+.framed img { display: block; width: 100%; height: auto; }
+
+/* =========================================================
+   RIBBON
+   ========================================================= */
+.date-section { padding-bottom: 0; }
+.ribbon {
+  position: relative; z-index: 3;
+  margin: 0 0 -60px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ribbon img {
+  display: block;
+  width: 130%; max-width: 1100px;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,.5));
+}
+.ribbon.reveal { transform: translateX(-60px); }
+.ribbon.reveal.visible { transform: none; }
+.ribbon.visible img { animation: wave 7s ease-in-out infinite; }
+
+/* =========================================================
+   6. QUOTES
+   ========================================================= */
+.quotes-section { padding-top: 60px; padding-bottom: 60px; }
+.flourish { width: 220px; margin: 0 auto 26px; display: block; }
+.flourish path { fill: none; stroke: var(--gold); stroke-width: 1.2; }
+.quotes { position: relative; min-height: 150px; }
+.quotes blockquote {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-style: italic; font-weight: 300;
+  font-size: clamp(25px, 6.5vw, 32px);
+  line-height: 1.35;
+  color: var(--cream);
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(4px);
+  transition: opacity 1.2s ease, transform 1.2s ease, filter 1.2s ease;
+}
+.quotes blockquote.active { opacity: 1; transform: none; filter: none; }
+.quote-dots { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+.quote-dots button {
+  width: 7px; height: 7px; border: none; border-radius: 50%;
+  background: rgba(232,211,160,.3); cursor: pointer;
+  transition: background .4s, transform .4s;
+}
+.quote-dots button.active { background: var(--gold); transform: scale(1.4); }
+
+/* =========================================================
+   7. DRESS CODE
+   ========================================================= */
+.swatches { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.swatches span {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: var(--c);
+  border: 2px solid rgba(232,211,160,.6);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  transition: transform .4s ease;
+}
+.swatches.visible span { animation: pop .7s backwards; }
+.swatches.visible span:nth-child(2) { animation-delay: .1s; }
+.swatches.visible span:nth-child(3) { animation-delay: .2s; }
+.swatches.visible span:nth-child(4) { animation-delay: .3s; }
+.swatches.visible span:nth-child(5) { animation-delay: .4s; }
+.swatches span:hover { transform: translateY(-6px); }
+
+/* =========================================================
+   8. RSVP
+   ========================================================= */
+.rsvp-buttons {
+  display: flex; justify-content: center; align-items: center; gap: 14px;
+  flex-wrap: wrap; margin-top: 26px;
+  min-height: 60px;
+  position: relative;
+}
+#yes { transition: transform .35s ease, box-shadow .3s ease; }
+#no { transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+.rsvp-answer { display: none; margin-top: 10px; font-size: 20px; }
+.rsvp-answer .script { font-size: 44px; color: var(--wine-600); }
+.rsvp.answered .rsvp-buttons { display: none; }
+.rsvp.answered .rsvp-answer { display: block; animation: fadeUp 1s ease; }
+
+/* =========================================================
+   9. FINALE
+   ========================================================= */
+.finale {
+  text-align: center;
+  padding: 80px 20px 110px;
+  display: flex; flex-direction: column; align-items: center; gap: 22px;
+}
+.finale .sub { margin-bottom: 10px; }
+.framed.flower { max-width: 360px; margin-bottom: 10px; }
+.finale-sign { font-style: italic; font-size: 24px; color: rgba(246,238,226,.85); }
+.finale-sign span { color: var(--gold-light); font-size: 34px; }
+.tiny { font-family: var(--sans); font-size: 11px; letter-spacing: .35em; text-transform: uppercase; color: var(--gold-light); }
+
+/* =========================================================
+   TAP HEARTS
+   ========================================================= */
+.tap-heart {
+  position: fixed; z-index: 120; pointer-events: none;
+  font-size: var(--fs, 18px);
+  animation: tapHeart 1.4s ease-out forwards;
+}
+
+/* =========================================================
+   SCROLL REVEAL
+   ========================================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1);
+}
+.reveal.visible { opacity: 1; transform: none; }
+
+/* =========================================================
+   KEYFRAMES
+   ========================================================= */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { to { background-position: -250% center; } }
+@keyframes blink { 0%,100% { opacity: .9; } 50% { opacity: .35; } }
+@keyframes ripple { from { transform: scale(1); opacity: .8; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes heartbeat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(1); } 45% { transform: scale(1.08); } }
+@keyframes shine { 0% { left: -80%; } 60%,100% { left: 130%; } }
+@keyframes pop { from { transform: scale(0); opacity: 0; } 70% { transform: scale(1.15); } to { transform: scale(1); opacity: 1; } }
+@keyframes wave { 0%,100% { transform: translateX(-50%) rotate(0deg); } 50% { transform: translateX(-50%) translateY(-8px) rotate(-1.5deg); } }
+@keyframes tapHeart {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(.6); }
+  to   { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% - 120px)) scale(1.3) rotate(var(--dr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+@media (max-width: 420px) {
+  .card { padding: 50px 24px 40px; }
+  .t-big { font-size: 36px; }
+}
